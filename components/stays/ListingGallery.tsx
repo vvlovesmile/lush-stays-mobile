@@ -5,23 +5,29 @@ type ListingGalleryProps = {
 };
 
 export function ListingGallery({ listing }: ListingGalleryProps) {
-  return (
-    <section>
-      <div className="relative aspect-[5/4] w-full overflow-hidden bg-[var(--card)]">
-          <img
-            src={listing.coverImage}
-            alt={listing.title}
-            className="h-full w-full object-cover"
-          />
+  const images = listing.galleryImages.length > 0 ? listing.galleryImages : [listing.coverImage];
 
-          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-1.5">
-            {listing.galleryImages.slice(0, 3).map((image) => (
-              <span
-                key={image}
-                className="h-1.5 w-1.5 rounded-full bg-white/75"
+  return (
+    <section className="px-5 pt-5">
+      <div className="mobile-container">
+        <div className="flex snap-x gap-3 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {images.map((image, index) => (
+            <div
+              key={image}
+              className="relative h-[320px] min-w-full snap-center overflow-hidden rounded-[30px] bg-[var(--linen)]"
+            >
+              <img
+                src={image}
+                alt={`${listing.title} 图片 ${index + 1}`}
+                className="h-full w-full object-cover"
               />
-            ))}
-          </div>
+
+              <div className="absolute bottom-4 right-4 rounded-full bg-black/45 px-3 py-1 font-[var(--font-jost)] text-xs text-white">
+                {index + 1} / {images.length}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
