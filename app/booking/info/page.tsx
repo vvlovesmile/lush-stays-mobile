@@ -1,11 +1,11 @@
 "use client";
 
-import { createBookingFromDraft } from "@/lib/bookings";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { getBookingDraft, type BookingDraft } from "@/lib/bookingDraft";
+import { saveBookingOrder } from "@/lib/order";
 
 type GuestInfo = {
   lastNamePinyin: string;
@@ -76,7 +76,45 @@ export default function BookingInfoPage() {
     try {
       window.sessionStorage.setItem(GUEST_INFO_KEY, JSON.stringify(guestInfo));
 
-      await createBookingFromDraft(draft, guestInfo);
+      const response = await fetch("/api/bookings/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          draft,
+          guestInfo,
+        }),
+      });
+
+      const responseText = await response.text();
+
+      let result: { bookingId?: string; createdAt?: string; error?: string } = {};
+
+      try {
+        result = JSON.parse(responseText);
+      } catch {
+        console.error("API did not return JSON:", responseText);
+        alert("创建订单失败：接口返回的不是 JSON，请检查 API route 是否正确。");
+        return;
+      }
+
+      if (!response.ok) {
+        console.error(result);
+        alert(result.error || "创建订单失败，请稍后重试。");
+        return;
+      }
+
+      if (!result.bookingId || !result.createdAt) {
+        console.error(result);
+        alert("创建订单失败：接口返回缺少订单编号。");
+        return;
+      }
+
+      saveBookingOrder({
+        bookingId: result.bookingId,
+        createdAt: result.createdAt,
+      });
 
       window.location.href = "/booking/payment";
     } catch (error) {

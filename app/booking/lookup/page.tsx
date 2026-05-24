@@ -4,10 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
-import {
-  findBookingByEmailAndBookingId,
-  saveLookupBooking,
-} from "@/lib/bookings";
+import { saveLookupBooking, type BookingRow } from "@/lib/bookings";
 
 export default function BookingLookupPage() {
   const router = useRouter();
@@ -30,14 +27,47 @@ export default function BookingLookupPage() {
     try {
       setIsLoading(true);
 
-      const booking = await findBookingByEmailAndBookingId(email, bookingId);
+      const response = await fetch("/api/bookings/lookup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          bookingId,
+        }),
+      });
 
-      if (!booking) {
+      const responseText = await response.text();
+
+      let result: { booking?: BookingRow; error?: string } = {};
+
+      try {
+        result = JSON.parse(responseText);
+      } catch {
+        console.error("Lookup API did not return JSON:", responseText);
+        alert("查询失败：接口返回的不是 JSON，请检查 API route 是否正确。");
+        return;
+      }
+
+      if (response.status === 404) {
         router.push("/booking/not-found");
         return;
       }
 
-      saveLookupBooking(booking);
+      if (!response.ok) {
+        console.error(result);
+        alert(result.error || "查询失败，请稍后重试。");
+        return;
+      }
+
+      if (!result.booking) {
+        console.error("Lookup API returned no booking:", result);
+        alert("查询失败，请稍后重试。");
+        return;
+      }
+
+      saveLookupBooking(result.booking);
       router.push("/booking/detail");
     } catch (error) {
       console.error(error);

@@ -4,11 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import {
-  getBookingByBookingId,
-  markBookingPaymentPendingReview,
-  type BookingRow,
-} from "@/lib/bookings";
+import { type BookingRow } from "@/lib/bookings";
 import { getBookingOrder } from "@/lib/order";
 
 const EXCHANGE_RATE = 0.21;
@@ -28,16 +24,41 @@ export default function BookingPaymentPage() {
           return;
         }
 
-        const currentBooking = await getBookingByBookingId(currentOrder.bookingId);
+        const response = await fetch("/api/bookings/payment-opened", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            bookingId: currentOrder.bookingId,
+          }),
+        });
 
-        if (!currentBooking) {
+        const responseText = await response.text();
+
+        let result: { booking?: BookingRow; error?: string } = {};
+
+        try {
+          result = JSON.parse(responseText);
+        } catch {
+          console.error("Payment API did not return JSON:", responseText);
           setBooking(null);
           return;
         }
 
-        const updatedBooking = await markBookingPaymentPendingReview(currentBooking);
+        if (!response.ok) {
+          console.error(result);
+          setBooking(null);
+          return;
+        }
 
-        setBooking(updatedBooking);
+        if (!result.booking) {
+          console.error("Payment API returned no booking:", result);
+          setBooking(null);
+          return;
+        }
+
+        setBooking(result.booking);
       } catch (error) {
         console.error(error);
         setBooking(null);
