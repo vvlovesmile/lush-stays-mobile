@@ -25,6 +25,39 @@ export type Listing = {
   discountRules: DiscountRule[];
 };
 
+export const defaultDiscountRules: DiscountRule[] = [
+  {
+    min_nights: 1,
+    max_nights: 6,
+    discount_rate: 1,
+    label: "1-6晚 · 标准价格",
+  },
+  {
+    min_nights: 7,
+    max_nights: 13,
+    discount_rate: 0.9,
+    label: "7-13晚 · 9折",
+  },
+  {
+    min_nights: 14,
+    max_nights: 20,
+    discount_rate: 0.8,
+    label: "14-20晚 · 8折",
+  },
+  {
+    min_nights: 21,
+    max_nights: 27,
+    discount_rate: 0.7,
+    label: "21-27晚 · 7折",
+  },
+  {
+    min_nights: 28,
+    max_nights: null,
+    discount_rate: 0.6,
+    label: "28晚及以上 · 6折",
+  },
+];
+
 export const listings: Listing[] = [
   {
     id: "1",
@@ -49,6 +82,7 @@ export const listings: Listing[] = [
     overview: ["最多入住 2 位客人", "1 间卧室", "1 间独立卫浴", "适合短住与慢旅行"],
     amenities: ["空调", "Wi-Fi", "独立卫浴", "庭院空间", "基础洗漱用品"],
     houseRules: ["入住时间 15:00 后", "退房时间 11:00 前", "入住前 14 天可免费取消", "请保持安静，尊重邻里"],
+    discountRules: defaultDiscountRules,
   },
   {
     id: "2",
@@ -73,6 +107,7 @@ export const listings: Listing[] = [
     overview: ["最多入住 3 位客人", "1 间卧室", "1 间独立卫浴", "带庭院休息区"],
     amenities: ["空调", "Wi-Fi", "庭院", "咖啡角", "基础厨房用品"],
     houseRules: ["入住时间 15:00 后", "退房时间 11:00 前", "入住前 14 天可免费取消", "禁止举办派对"],
+    discountRules: defaultDiscountRules,
   },
   {
     id: "3",
@@ -97,6 +132,7 @@ export const listings: Listing[] = [
     overview: ["最多入住 2 位客人", "1 间卧室", "1 间独立卫浴", "靠近素贴生活区"],
     amenities: ["空调", "Wi-Fi", "办公桌", "独立卫浴", "洗衣便利"],
     houseRules: ["入住时间 15:00 后", "退房时间 11:00 前", "入住前 14 天可免费取消", "室内禁止吸烟"],
+    discountRules: defaultDiscountRules,
   },
   {
     id: "4",
@@ -121,6 +157,7 @@ export const listings: Listing[] = [
     overview: ["最多入住 4 位客人", "2 间卧室", "1 间独立卫浴", "适合朋友与家庭"],
     amenities: ["空调", "Wi-Fi", "客厅", "基础厨房", "停车便利"],
     houseRules: ["入住时间 15:00 后", "退房时间 11:00 前", "入住前 14 天可免费取消", "请勿大声喧哗"],
+    discountRules: defaultDiscountRules,
   },
   {
     id: "5",
@@ -145,6 +182,7 @@ export const listings: Listing[] = [
     overview: ["最多入住 2 位客人", "1 间卧室", "1 间独立卫浴", "适合个人旅居"],
     amenities: ["空调", "Wi-Fi", "独立卫浴", "咖啡街区", "生活便利"],
     houseRules: ["入住时间 15:00 后", "退房时间 11:00 前", "入住前 14 天可免费取消", "请爱护房间物品"],
+    discountRules: defaultDiscountRules,
   },
 ];
 
