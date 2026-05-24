@@ -2,11 +2,20 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { getBookingDraft, type BookingDraft } from "@/lib/bookingDraft";
+import { supabase } from "@/lib/supabaseClient";
+
 
 export default function BookingVerifyPage() {
+  const router = useRouter();
+
+  const [isSending, setIsSending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [hasSentCode, setHasSentCode] = useState(false);
+
   const [draft, setDraft] = useState<BookingDraft | null>(null);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -19,28 +28,83 @@ export default function BookingVerifyPage() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  const handleSendCode = () => {
-    if (!email) {
+  const handleSendCode = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
       alert("请输入邮箱地址");
       return;
     }
 
-    alert("第一版暂时不发送真实验证码，后续会接入邮箱验证。");
+    try {
+      setIsSending(true);
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
+
+      if (error) {
+        console.error(error);
+        alert(error.message || "验证码发送失败，请稍后重试。");
+        return;
+      }
+
+      setEmail(normalizedEmail);
+      setHasSentCode(true);
+      alert("验证码已发送，请检查您的邮箱。");
+    } catch (error) {
+      console.error(error);
+      alert("验证码发送失败，请稍后重试。");
+    } finally {
+      setIsSending(false);
+    }
   };
 
-  const handleContinue = () => {
-    if (!email) {
+  const handleContinue = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedCode = code.trim();
+
+    if (!normalizedEmail) {
       alert("请输入邮箱地址");
       return;
     }
 
-    if (!code) {
+    if (!normalizedCode) {
       alert("请输入验证码");
       return;
     }
 
-    window.sessionStorage.setItem("lush_booking_email", email);
-    window.location.href = "/booking/info";
+    if (!hasSentCode) {
+      alert("请先点击发送验证码。");
+      return;
+    }
+
+    try {
+      setIsVerifying(true);
+
+      const { error } = await supabase.auth.verifyOtp({
+        email: normalizedEmail,
+        token: normalizedCode,
+        type: "email",
+      });
+
+      if (error) {
+        console.error(error);
+        alert(error.message || "验证码错误或已过期，请重新输入。");
+        return;
+      }
+
+      window.sessionStorage.setItem("lush_booking_email", normalizedEmail);
+      router.push("/booking/info");
+    } catch (error) {
+      console.error(error);
+      alert("邮箱验证失败，请稍后重试。");
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   if (!draft) {
@@ -165,7 +229,11 @@ export default function BookingVerifyPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setHasSentCode(false);
+                  setCode("");
+                }}
                 placeholder="请输入邮箱地址"
                 className="h-13 w-full rounded-2xl border border-[var(--linen)] bg-white px-4 font-[var(--font-jost)] text-sm outline-none"
               />
@@ -178,31 +246,35 @@ export default function BookingVerifyPage() {
 
               <input
                 type="text"
+                inputMode="numeric"
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
-                placeholder="请输入验证码"
+                placeholder="请输入6位验证码"
                 className="h-13 w-full rounded-2xl border border-[var(--linen)] bg-white px-4 font-[var(--font-jost)] text-sm outline-none"
               />
+              
             </label>
 
             <button
               type="button"
               onClick={handleSendCode}
-              className="mt-5 w-full rounded-2xl bg-[var(--forest)] px-6 py-4 font-[var(--font-jost)] text-sm font-medium tracking-[0.08em] text-[var(--cream)]"
+              disabled={isSending}
+              className="mt-5 w-full rounded-2xl bg-[var(--forest)] px-6 py-4 font-[var(--font-jost)] text-sm font-medium tracking-[0.08em] text-[var(--cream)] disabled:opacity-60"
             >
-              发送验证码
+              {isSending ? "发送中..." : hasSentCode ? "重新发送验证码" : "发送验证码"}
             </button>
 
             <button
               type="button"
               onClick={handleContinue}
-              className="mt-3 w-full rounded-2xl border border-[var(--forest)] px-6 py-4 font-[var(--font-jost)] text-sm font-medium tracking-[0.08em] text-[var(--forest-dark)]"
+              disabled={isVerifying}
+              className="mt-3 w-full rounded-2xl border border-[var(--forest)] px-6 py-4 font-[var(--font-jost)] text-sm font-medium tracking-[0.08em] text-[var(--forest-dark)] disabled:opacity-60"
             >
-              验证并继续
+              {isVerifying ? "验证中..." : "验证并继续"}
             </button>
 
             <p className="mt-5 text-center font-[var(--font-jost)] text-xs font-light text-[var(--sage)]">
-              没有收到验证码？重新发送（60s）
+              没有收到验证码？请检查垃圾邮件，或稍后点击“重新发送验证码”。
             </p>
           </div>
         </div>
