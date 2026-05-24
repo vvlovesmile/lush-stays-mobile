@@ -1,8 +1,11 @@
+
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { Hero } from "@/components/home/Hero";
 import { StayCard } from "@/components/home/StayCard";
 import { getActiveListings } from "@/lib/listings";
+
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const listings = await getActiveListings();

@@ -9,19 +9,13 @@ import {
   getListingBySlugFromSupabase,
 } from "@/lib/listings";
 
+export const dynamic = "force-dynamic";
+
 type StayDetailPageProps = {
   params: Promise<{
     slug: string;
   }>;
 };
-
-export async function generateStaticParams() {
-  const listings = await getActiveListings();
-
-  return listings.map((listing) => ({
-    slug: listing.slug,
-  }));
-}
 
 export default async function StayDetailPage({ params }: StayDetailPageProps) {
   const { slug } = await params;
