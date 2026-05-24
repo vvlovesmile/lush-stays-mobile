@@ -5,29 +5,28 @@ type ListingGalleryProps = {
 };
 
 export function ListingGallery({ listing }: ListingGalleryProps) {
-  const images = listing.galleryImages.length > 0 ? listing.galleryImages : [listing.coverImage];
+  const images =
+    listing.galleryImages.length > 0 ? listing.galleryImages : [listing.coverImage];
 
   return (
-    <section className="px-5 pt-5">
-      <div className="mobile-container">
-        <div className="flex snap-x gap-3 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {images.map((image, index) => (
-            <div
-              key={image}
-              className="relative h-[320px] min-w-full snap-center overflow-hidden rounded-[30px] bg-[var(--linen)]"
-            >
-              <img
-                src={image}
-                alt={`${listing.title} 图片 ${index + 1}`}
-                className="h-full w-full object-cover"
-              />
+    <section className="pt-0">
+      <div className="flex snap-x overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {images.map((image, index) => (
+          <div
+            key={image}
+            className="relative aspect-[5/4] min-w-full snap-center overflow-hidden bg-[var(--linen)]"
+          >
+            <img
+              src={image}
+              alt={`${listing.title} 图片 ${index + 1}`}
+              className="h-full w-full object-cover"
+            />
 
-              <div className="absolute bottom-4 right-4 rounded-full bg-black/45 px-3 py-1 font-[var(--font-jost)] text-xs text-white">
-                {index + 1} / {images.length}
-              </div>
+            <div className="absolute bottom-4 right-4 rounded-full bg-black/45 px-3 py-1 font-[var(--font-jost)] text-xs text-white">
+              {index + 1} / {images.length}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </section>
   );
