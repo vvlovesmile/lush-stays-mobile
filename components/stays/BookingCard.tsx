@@ -121,6 +121,10 @@ export function BookingCard({ listing }: BookingCardProps) {
 
   const totalPrice = pricing.finalTotal;
 
+  const discountedPricePerNight = Math.round(
+    listing.pricePerNightThb * pricing.discountRate
+  );
+
   const handleReserve = () => {
     if (!checkin || !checkout || nights <= 0 || totalPrice <= 0) {
       alert("请先选择入住日期和退房日期");
@@ -336,7 +340,7 @@ export function BookingCard({ listing }: BookingCardProps) {
               每晚价格
             </p>
             <p className="mt-3 font-[var(--font-cormorant)] text-[26px] font-semibold text-[var(--forest-dark)]">
-              ฿{listing.pricePerNightThb}
+              ฿{discountedPricePerNight.toLocaleString()}
             </p>
           </div>
 
