@@ -3,7 +3,7 @@ export function Hero() {
     <section className="bg-white">
       <div className="relative aspect-[2/1] w-full overflow-hidden">
         <img
-          src="https://res.cloudinary.com/dekilxb9g/image/upload/v1779768703/pexels-biren-negi-581272-36598794_yr2qv0.jpg"
+          src="https://res.cloudinary.com/dekilxb9g/image/upload/v1779769253/pexels-daniel-1055408_i0f3wt.jpg"
           alt="清迈精品旅居"
           className="h-full w-full object-cover"
         />
@@ -15,7 +15,7 @@ export function Hero() {
             住进真正的清迈生活
           </h1>
 
-          <p className="mt-3 max-w-[300px] font-[var(--font-jost)] text-[13px] font-light leading-6 text-[rgba(255,255,255,0.84)]">
+          <p className="mt-3 max-w-[320px] font-[var(--font-jost)] text-[13px] font-light leading-6 text-[rgba(255,255,255,0.84)]">
             在东南亚的热闹与静谧之间，找寻属于你的旅居日常。
           </p>
         </div>
