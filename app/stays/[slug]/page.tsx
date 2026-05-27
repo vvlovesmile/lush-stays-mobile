@@ -4,10 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { BookingCard } from "@/components/stays/BookingCard";
 import { ListingGallery } from "@/components/stays/ListingGallery";
 import { ListingInfo } from "@/components/stays/ListingInfo";
-import {
-  getActiveListings,
-  getListingBySlugFromSupabase,
-} from "@/lib/listings";
+import { getListingBySlugFromSupabase } from "@/lib/listings";
 
 export const dynamic = "force-dynamic";
 
@@ -35,10 +32,10 @@ export default async function StayDetailPage({ params }: StayDetailPageProps) {
 
       <BookingCard listing={listing} />
 
-      <section className="px-5 pt-8">
+      <section className="bg-white px-5 pt-8">
         <div className="mobile-container space-y-7">
           <div>
-            <h2 className="font-[var(--font-cormorant)] text-[30px] font-medium text-[var(--forest-dark)]">
+            <h2 className="font-[var(--font-cormorant)] text-[22px] font-medium text-[var(--forest-dark)]">
               房源介绍
             </h2>
             <p className="mt-3 font-[var(--font-jost)] text-sm font-light leading-7 text-[var(--sage)]">
@@ -47,14 +44,14 @@ export default async function StayDetailPage({ params }: StayDetailPageProps) {
           </div>
 
           <div>
-            <h2 className="font-[var(--font-cormorant)] text-[30px] font-medium text-[var(--forest-dark)]">
+            <h2 className="font-[var(--font-cormorant)] text-[22px] font-medium text-[var(--forest-dark)]">
               房源概况
             </h2>
             <div className="mt-3 grid gap-2">
               {listing.overview.map((item) => (
                 <div
                   key={item}
-                  className="rounded-2xl border border-[var(--linen)] bg-[var(--card)] px-4 py-3 font-[var(--font-jost)] text-sm font-light text-[var(--forest-dark)]"
+                  className="rounded-2xl border border-[#d7d7d1] bg-white px-4 py-3 font-[var(--font-jost)] text-sm font-light text-[var(--forest-dark)]"
                 >
                   {item}
                 </div>
@@ -63,7 +60,7 @@ export default async function StayDetailPage({ params }: StayDetailPageProps) {
           </div>
 
           <div>
-            <h2 className="font-[var(--font-cormorant)] text-[30px] font-medium text-[var(--forest-dark)]">
+            <h2 className="font-[var(--font-cormorant)] text-[22px] font-medium text-[var(--forest-dark)]">
               配套设施
             </h2>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -79,19 +76,20 @@ export default async function StayDetailPage({ params }: StayDetailPageProps) {
           </div>
 
           <div>
-            <h2 className="font-[var(--font-cormorant)] text-[30px] font-medium text-[var(--forest-dark)]">
+            <h2 className="font-[var(--font-cormorant)] text-[22px] font-medium text-[var(--forest-dark)]">
               入住须知
             </h2>
-            <div className="mt-3 space-y-2">
+            <ul className="mt-3 space-y-2">
               {listing.houseRules.map((item) => (
-                <div
+                <li
                   key={item}
-                  className="rounded-2xl bg-[rgba(60,85,56,0.06)] px-4 py-3 font-[var(--font-jost)] text-sm font-light text-[var(--forest-dark)]"
+                  className="flex gap-2 font-[var(--font-jost)] text-sm font-light leading-6 text-[var(--forest-dark)]"
                 >
-                  {item}
-                </div>
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--sage-light)]" />
+                  <span>{item}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </div>
       </section>

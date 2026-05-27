@@ -25,14 +25,18 @@ function getTodayString() {
   return `${year}-${month}-${day}`;
 }
 
-function formatDateDisplay(date: string) {
-  if (!date) {
-    return "2026-05-22";
-  }
-
+function formatSlashDate(date: string) {
   const currentDate = new Date(`${date}T00:00:00`);
 
-  return `${currentDate.getMonth() + 1}月${currentDate.getDate()}日`;
+  return `${currentDate.getFullYear()}/${currentDate.getMonth() + 1}/${currentDate.getDate()}`;
+}
+
+function formatDateDisplay(date: string, placeholder: string) {
+  if (!date) {
+    return placeholder;
+  }
+
+  return formatSlashDate(date);
 }
 
 function calculateNights(checkin: string, checkout: string) {
@@ -157,11 +161,13 @@ export function BookingCard({ listing }: BookingCardProps) {
     router.push("/booking/verify");
   };
 
-  const calendarDays = useMemo(() => {
-    return getCalendarDays(calendarMonth);
+  const visibleCalendarMonths = useMemo(() => {
+    return [calendarMonth, addMonths(calendarMonth, 1)];
   }, [calendarMonth]);
 
   const checkoutMinDate = getNextDateString(checkin) || today;
+  const checkinPlaceholder = formatSlashDate(today);
+  const checkoutPlaceholder = formatSlashDate(getNextDateString(today));
   const canGoPrevious = calendarMonth > firstCalendarMonth;
 
   const handleDateSelect = (date: string) => {
@@ -172,9 +178,8 @@ export function BookingCard({ listing }: BookingCardProps) {
         setCheckout("");
       }
 
-      const nextDate = getNextDateString(date);
       setActiveDateField("checkout");
-      setCalendarMonth(new Date(`${nextDate.slice(0, 7)}-01T00:00:00`));
+      setCalendarMonth(new Date(`${date.slice(0, 7)}-01T00:00:00`));
       return;
     }
 
@@ -191,29 +196,31 @@ export function BookingCard({ listing }: BookingCardProps) {
   };
 
   return (
-    <section className="bg-white px-2.5 pt-6">
-      <div className="mx-auto w-full max-w-[460px] rounded-xl border border-[var(--linen)] bg-white px-3 py-4 soft-shadow">
-        <div className="grid grid-cols-[0.8fr_0.72fr_1.12fr_1.12fr] gap-1.5">
+    <section className="bg-white px-2.5 pt-2">
+      <div className="mx-auto w-full max-w-[460px] rounded-xl border border-[#d7d7d1] bg-white px-3 py-2.5 soft-shadow">
+        <div className="grid grid-cols-[0.72fr_0.64fr_1fr_1fr] gap-1.5">
           <label className="block">
             <span className="mb-1.5 block whitespace-nowrap font-[var(--font-jost)] text-[10px] font-medium text-[var(--sage)]">
               几人入住
             </span>
 
-            <select
-              value={guests}
-              onChange={(event) => setGuests(Number(event.target.value))}
-              className="h-10 w-full rounded-lg border border-[var(--linen)] bg-white px-2 font-[var(--font-jost)] text-sm text-[var(--forest-dark)] outline-none"
-            >
-              {Array.from({ length: listing.maxGuests }).map((_, index) => {
-                const guestCount = index + 1;
+            <div className="flex h-7 w-full items-center overflow-hidden rounded-lg border border-[var(--linen)] bg-white">
+              <select
+                value={guests}
+                onChange={(event) => setGuests(Number(event.target.value))}
+                className="h-full w-[133%] origin-left scale-75 bg-transparent px-2 font-[var(--font-jost)] text-[8px] text-[var(--forest-dark)] outline-none"
+              >
+                {Array.from({ length: listing.maxGuests }).map((_, index) => {
+                  const guestCount = index + 1;
 
-                return (
-                  <option key={guestCount} value={guestCount}>
-                    {guestCount}人
-                  </option>
-                );
-              })}
-            </select>
+                  return (
+                    <option key={guestCount} value={guestCount}>
+                      {guestCount}人
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </label>
 
           <label className="block">
@@ -221,15 +228,17 @@ export function BookingCard({ listing }: BookingCardProps) {
               几间房
             </span>
 
-            <select
-              value={rooms}
-              onChange={(event) => setRooms(Number(event.target.value))}
-              className="h-10 w-full rounded-lg border border-[var(--linen)] bg-white px-2 font-[var(--font-jost)] text-sm text-[var(--forest-dark)] outline-none"
-            >
-              <option value={1}>1间</option>
-              <option value={2}>2间</option>
-              <option value={3}>3间</option>
-            </select>
+            <div className="flex h-7 w-full items-center overflow-hidden rounded-lg border border-[var(--linen)] bg-white">
+              <select
+                value={rooms}
+                onChange={(event) => setRooms(Number(event.target.value))}
+                className="h-full w-[133%] origin-left scale-75 bg-transparent px-2 font-[var(--font-jost)] text-[8px] text-[var(--forest-dark)] outline-none"
+              >
+                <option value={1}>1间</option>
+                <option value={2}>2间</option>
+                <option value={3}>3间</option>
+              </select>
+            </div>
           </label>
 
           <div className="block">
@@ -240,9 +249,13 @@ export function BookingCard({ listing }: BookingCardProps) {
             <button
               type="button"
               onClick={() => setActiveDateField("checkin")}
-              className="h-10 w-full truncate rounded-lg border border-[var(--linen)] bg-white px-2 text-left font-[var(--font-jost)] text-xs text-[var(--forest-dark)] outline-none"
+              className={`flex h-7 w-full items-center truncate rounded-lg border border-[var(--linen)] bg-white px-1.5 text-left font-[var(--font-jost)] text-[8px] outline-none ${
+                checkin ? "text-[var(--forest-dark)]" : "text-[var(--sage-light)]"
+              }`}
             >
-              {formatDateDisplay(checkin)}
+              <span className="block origin-left scale-75 leading-none">
+                {formatDateDisplay(checkin, checkinPlaceholder)}
+              </span>
             </button>
           </div>
 
@@ -261,103 +274,144 @@ export function BookingCard({ listing }: BookingCardProps) {
                   );
                 }
               }}
-              className="h-10 w-full truncate rounded-lg border border-[var(--linen)] bg-white px-2 text-left font-[var(--font-jost)] text-xs text-[var(--forest-dark)] outline-none"
+              className={`flex h-7 w-full items-center truncate rounded-lg border border-[var(--linen)] bg-white px-1.5 text-left font-[var(--font-jost)] text-[8px] outline-none ${
+                checkout ? "text-[var(--forest-dark)]" : "text-[var(--sage-light)]"
+              }`}
             >
-              {formatDateDisplay(checkout)}
+              <span className="block origin-left scale-75 leading-none">
+                {formatDateDisplay(checkout, checkoutPlaceholder)}
+              </span>
             </button>
           </div>
         </div>
 
         {activeDateField ? (
-          <div className="mt-4 rounded-xl border border-[var(--linen)] bg-white p-4">
-            <div className="flex items-center justify-between">
+          <div className="mt-2 rounded-lg border border-[var(--linen)] bg-white p-2">
+            <div className="grid grid-cols-2 gap-1 font-[var(--font-jost)] text-[9px]">
+              <button
+                type="button"
+                onClick={() => setActiveDateField("checkin")}
+                className={`rounded-md px-2 py-1 ${
+                  activeDateField === "checkin"
+                    ? "bg-[rgba(60,85,56,0.1)] text-[var(--forest-dark)]"
+                    : "text-[var(--sage)]"
+                }`}
+              >
+                入住日期
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveDateField("checkout")}
+                className={`rounded-md px-2 py-1 ${
+                  activeDateField === "checkout"
+                    ? "bg-[rgba(60,85,56,0.1)] text-[var(--forest-dark)]"
+                    : "text-[var(--sage)]"
+                }`}
+              >
+                退房日期
+              </button>
+            </div>
+
+            <div className="mt-2 flex items-center justify-between">
               <button
                 type="button"
                 disabled={!canGoPrevious}
                 onClick={() => setCalendarMonth(addMonths(calendarMonth, -1))}
-                className="h-8 w-8 rounded-lg text-[var(--forest-dark)] disabled:text-[var(--sage-light)]"
+                className="h-5 w-5 rounded-md text-xs text-[var(--forest-dark)] disabled:text-[var(--sage-light)]"
                 aria-label="上个月"
               >
                 ‹
               </button>
 
-              <div className="font-[var(--font-jost)] text-sm font-medium text-[var(--forest-dark)]">
+              <div className="font-[var(--font-jost)] text-[9px] font-medium text-[var(--forest-dark)]">
                 {activeDateField === "checkin" ? "选择入住日期" : "选择退房日期"}
-                <span className="ml-2 text-[var(--sage)]">
-                  {getMonthTitle(calendarMonth)}
-                </span>
               </div>
 
               <button
                 type="button"
                 onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}
-                className="h-8 w-8 rounded-lg text-[var(--forest-dark)]"
+                className="h-5 w-5 rounded-md text-xs text-[var(--forest-dark)]"
                 aria-label="下个月"
               >
                 ›
               </button>
             </div>
 
-            <div className="mt-4 grid grid-cols-7 gap-1 text-center font-[var(--font-jost)] text-[11px] text-[var(--sage)]">
-              {weekDays.map((day) => (
-                <div key={day}>{day}</div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {visibleCalendarMonths.map((monthDate) => (
+                <div key={getMonthTitle(monthDate)}>
+                  <div className="text-center font-[var(--font-jost)] text-[8px] font-medium text-[var(--sage)]">
+                    {getMonthTitle(monthDate)}
+                  </div>
+
+                  <div className="mt-1 grid grid-cols-7 gap-0.5 text-center font-[var(--font-jost)] text-[7px] text-[var(--sage-light)]">
+                    {weekDays.map((day) => (
+                      <div key={`${getMonthTitle(monthDate)}-${day}`}>
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-1 grid grid-cols-7 gap-0.5">
+                    {getCalendarDays(monthDate).map((date, index) => {
+                      if (!date) {
+                        return <div key={`blank-${index}`} className="h-4" />;
+                      }
+
+                      const isSelected = date === checkin || date === checkout;
+                      const disabled = isDateDisabled(date);
+                      const day = Number(date.slice(-2));
+
+                      return (
+                        <button
+                          key={date}
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => handleDateSelect(date)}
+                          className={`flex h-4 items-center justify-center rounded font-[var(--font-jost)] text-[8px] leading-none ${
+                            isSelected
+                              ? "bg-[var(--forest)] text-white"
+                              : "bg-transparent text-[var(--forest-dark)]"
+                          } disabled:text-[var(--sage-light)]`}
+                        >
+                          <span className="block scale-75 leading-none">
+                            {day}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               ))}
-            </div>
-
-            <div className="mt-2 grid grid-cols-7 gap-1">
-              {calendarDays.map((date, index) => {
-                if (!date) {
-                  return <div key={`blank-${index}`} className="h-9" />;
-                }
-
-                const isSelected = date === checkin || date === checkout;
-                const disabled = isDateDisabled(date);
-                const day = Number(date.slice(-2));
-
-                return (
-                  <button
-                    key={date}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => handleDateSelect(date)}
-                    className={`h-9 rounded-lg font-[var(--font-jost)] text-sm ${
-                      isSelected
-                        ? "bg-[var(--forest)] text-white"
-                        : "bg-transparent text-[var(--forest-dark)]"
-                    } disabled:text-[var(--sage-light)]`}
-                  >
-                    {day}
-                  </button>
-                );
-              })}
             </div>
           </div>
         ) : null}
 
-        <div className="mt-4 grid grid-cols-3 rounded-xl bg-[rgba(60,85,56,0.06)] px-3 py-4">
-          <div>
-            <p className="font-[var(--font-jost)] text-xs font-medium text-[var(--sage)]">
+        <div className="mt-2.5 grid grid-cols-3 gap-1.5 rounded-lg border border-[rgba(60,85,56,0.16)] px-2 py-1.5">
+          <div className="flex items-center justify-between gap-1 px-1.5 py-1">
+            <p className="whitespace-nowrap font-[var(--font-jost)] text-[9px] font-medium text-[var(--sage)]">
               每晚价格
             </p>
-            <p className="mt-3 font-[var(--font-cormorant)] text-[26px] font-semibold text-[var(--forest-dark)]">
+            <p className="whitespace-nowrap font-[var(--font-cormorant)] text-[15px] font-semibold text-[var(--forest-dark)]">
               ฿{discountedPricePerNight.toLocaleString()}
             </p>
           </div>
 
-          <div>
-            <p className="font-[var(--font-jost)] text-xs font-medium text-[var(--sage)]">
+          <div className="flex items-center justify-between gap-1 px-1.5 py-1">
+            <p className="whitespace-nowrap font-[var(--font-jost)] text-[9px] font-medium text-[var(--sage)]">
               晚数
             </p>
-            <p className="mt-3 font-[var(--font-cormorant)] text-[26px] font-semibold text-[var(--forest-dark)]">
+            <p className="whitespace-nowrap font-[var(--font-cormorant)] text-[15px] font-semibold text-[var(--forest-dark)]">
               {nights > 0 ? `${nights}晚` : "—"}
             </p>
           </div>
 
-          <div>
-            <p className="font-[var(--font-jost)] text-xs font-medium text-[var(--sage)]">
+          <div className="flex items-center justify-between gap-1 px-1.5 py-1">
+            <p className="whitespace-nowrap font-[var(--font-jost)] text-[9px] font-medium text-[var(--sage)]">
               总价格
             </p>
-            <p className="mt-3 font-[var(--font-cormorant)] text-[26px] font-semibold text-[var(--forest-dark)]">
+            <p className="whitespace-nowrap font-[var(--font-cormorant)] text-[15px] font-semibold text-[var(--forest-dark)]">
               {totalPrice > 0 ? `฿${totalPrice.toLocaleString()}` : "—"}
             </p>
           </div>
@@ -366,12 +420,12 @@ export function BookingCard({ listing }: BookingCardProps) {
        <button
           type="button"
           onClick={handleReserve}
-          className="mt-5 w-full rounded-2xl bg-[var(--forest)] px-6 py-4 font-[var(--font-jost)] text-lg font-medium tracking-[0.08em] text-[var(--cream)]"
+          className="mx-auto mt-3 flex w-[72%] justify-center rounded-lg bg-[var(--forest)] px-6 py-2 font-[var(--font-jost)] text-sm font-medium tracking-[0.08em] !text-white"
         >
           立即预定
         </button>
 
-        <p className="mt-4 text-center font-[var(--font-jost)] text-sm font-light leading-6 text-[var(--sage)]">
+        <p className="mt-2 text-center font-[var(--font-jost)] text-[9px] font-light leading-4 text-[var(--sage)]">
           安全支付 · 房东确认 · 入住前14天可免费取消
         </p>
       </div>

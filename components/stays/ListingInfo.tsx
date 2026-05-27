@@ -37,26 +37,28 @@ function BathIcon() {
 
 export function ListingInfo({ listing }: ListingInfoProps) {
   return (
-    <section className="bg-white px-5 pt-0">
-      <div className="mobile-container rounded-b-xl border-x border-b border-[#d7d7d1] bg-white px-4 py-3 shadow-[0_10px_24px_rgba(42,61,39,0.06)]">
-        <p className="font-[var(--font-jost)] text-[9px] uppercase tracking-[0.1em] text-[var(--sage)]">
-          {listing.locationLabel}
-        </p>
+    <section className="bg-white px-2.5 pt-0">
+      <div className="mx-auto w-full max-w-[460px] rounded-b-xl border-x border-b border-[#d7d7d1] bg-white px-4 py-2 shadow-[0_10px_24px_rgba(42,61,39,0.06)]">
+        <div className="flex min-w-0 items-center gap-2">
+          <p className="shrink-0 font-[var(--font-jost)] text-[8px] uppercase tracking-[0.08em] text-[var(--sage)]">
+            {listing.locationLabel}
+          </p>
 
-        <h1 className="mt-1.5 font-[var(--font-cormorant)] text-xs font-medium leading-[1.15] text-[var(--forest-dark)]">
-          {listing.title}
-        </h1>
+          <h1 className="min-w-0 truncate font-[var(--font-cormorant)] text-xs font-medium leading-[1.15] text-[var(--forest-dark)]">
+            {listing.title}
+          </h1>
+        </div>
 
-        <div className="mt-2 grid grid-cols-3 gap-1 font-[var(--font-jost)] text-[9px] font-light leading-3 text-[var(--sage)]">
-          <span className="flex items-center gap-1 whitespace-nowrap">
+        <div className="mt-1.5 grid grid-cols-3 justify-items-center font-[var(--font-jost)] text-[9px] font-light leading-3 text-[var(--sage)]">
+          <span className="flex min-w-0 items-center justify-center gap-1 whitespace-nowrap">
             <GuestIcon />
             {listing.maxGuests}位旅人
           </span>
-          <span className="flex items-center gap-1 whitespace-nowrap">
+          <span className="flex min-w-0 items-center justify-center gap-1 whitespace-nowrap">
             <BedIcon />
             {listing.bed_label}
           </span>
-          <span className="flex items-center gap-1 whitespace-nowrap">
+          <span className="flex min-w-0 items-center justify-center gap-1 whitespace-nowrap">
             <BathIcon />
             {listing.bathroomLabel}
           </span>

@@ -38,8 +38,8 @@ function BathIcon() {
 
 export function StayCard({ listing }: StayCardProps) {
   return (
-    <article className="soft-shadow grid grid-cols-[47%_minmax(0,1fr)] overflow-hidden rounded-xl border border-[var(--linen)] bg-white">
-      <div className="relative aspect-[5/4] w-full overflow-hidden">
+    <article className="soft-shadow grid grid-cols-[47%_minmax(0,1fr)] overflow-hidden rounded-xl border border-[#d7d7d1] bg-white">
+      <div className="relative h-full min-h-0 w-full overflow-hidden">
         <img
           src={listing.coverImage}
           alt={listing.title}
@@ -57,7 +57,7 @@ export function StayCard({ listing }: StayCardProps) {
           </h3>
         </div>
 
-        <div className="grid gap-1 font-[var(--font-jost)] text-[9px] font-light leading-3 text-[var(--sage)]">
+        <div className="mt-2 grid gap-1 font-[var(--font-jost)] text-[9px] font-light leading-3 text-[var(--sage)]">
           <span className="flex items-center gap-1">
             <GuestIcon />
             {listing.maxGuests}位旅人
@@ -72,9 +72,12 @@ export function StayCard({ listing }: StayCardProps) {
           </span>
         </div>
 
-        <div className="mt-1.5 flex items-center justify-between gap-1.5 pr-1">
-          <div className="flex h-7 items-center whitespace-nowrap font-[var(--font-cormorant)] text-sm font-medium text-[var(--forest-dark)]">
-            ฿{listing.pricePerNightThb} / 晚 起
+        <div className="mt-1.5 flex items-end justify-between gap-1.5 pr-1">
+          <div className="grid gap-0.5 whitespace-nowrap font-[var(--font-jost)] text-[10px] font-medium text-[var(--forest-dark)]">
+            <span>฿{listing.pricePerNightThb}/晚</span>
+            <span className="text-[8px] font-normal text-[var(--sage)]">
+              长住优惠
+            </span>
           </div>
 
           <Link
