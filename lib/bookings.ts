@@ -341,7 +341,7 @@ export function clearLookupBooking() {
 export function formatPaymentStatus(status: string) {
   const statusMap: Record<string, string> = {
     pending_payment: "待支付",
-    pending_review: "待人工核对",
+    pending_review: "系统确认中",
     paid: "已付款",
     failed: "支付失败",
     refunded: "已退款",
@@ -352,7 +352,7 @@ export function formatPaymentStatus(status: string) {
 
 export function formatBookingStatus(status: string) {
   const statusMap: Record<string, string> = {
-    pending_confirmation: "待确认",
+    pending_confirmation: "待房东确认",
     confirmed: "已确认",
     cancelled: "已取消",
     completed: "已完成",

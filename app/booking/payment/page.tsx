@@ -5,12 +5,14 @@ import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { type BookingRow } from "@/lib/bookings";
+import { getListingBySlugFromSupabase } from "@/lib/listings";
 import { getBookingOrder } from "@/lib/order";
 
 const EXCHANGE_RATE = 0.21;
 
 export default function BookingPaymentPage() {
   const [booking, setBooking] = useState<BookingRow | null>(null);
+  const [listingMaxGuests, setListingMaxGuests] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
@@ -59,6 +61,16 @@ export default function BookingPaymentPage() {
         }
 
         setBooking(result.booking);
+
+        try {
+          const listing = await getListingBySlugFromSupabase(
+            result.booking.listing_slug
+          );
+          setListingMaxGuests(listing?.maxGuests ?? null);
+        } catch (error) {
+          console.error(error);
+          setListingMaxGuests(null);
+        }
       } catch (error) {
         console.error(error);
         setBooking(null);
@@ -80,6 +92,12 @@ export default function BookingPaymentPage() {
     return Number((booking.total_price_thb * EXCHANGE_RATE).toFixed(2));
   }, [booking]);
 
+  const maxGuestCapacity = useMemo(() => {
+    if (!booking) return 0;
+
+    return booking.num_rooms * (listingMaxGuests ?? booking.num_guests);
+  }, [booking, listingMaxGuests]);
+
   const handleCopyBookingId = async () => {
     if (!booking?.booking_id) return;
 
@@ -97,11 +115,11 @@ export default function BookingPaymentPage() {
 
   if (isLoading) {
     return (
-      <main className="page-shell">
+      <main className="min-h-screen bg-white">
         <Header />
 
-        <section className="px-5 py-14">
-          <div className="mobile-container rounded-[28px] border border-[var(--linen)] bg-[var(--card)] p-6 text-center soft-shadow">
+        <section className="bg-white px-5 py-14">
+          <div className="mobile-container rounded-xl border border-[#d7d7d1] bg-white p-6 text-center soft-shadow">
             <h1 className="font-[var(--font-cormorant)] text-[32px] font-medium text-[var(--forest-dark)]">
               正在加载支付信息
             </h1>
@@ -119,11 +137,11 @@ export default function BookingPaymentPage() {
 
   if (!booking) {
     return (
-      <main className="page-shell">
+      <main className="min-h-screen bg-white">
         <Header />
 
-        <section className="px-5 py-14">
-          <div className="mobile-container rounded-[28px] border border-[var(--linen)] bg-[var(--card)] p-6 text-center soft-shadow">
+        <section className="bg-white px-5 py-14">
+          <div className="mobile-container rounded-xl border border-[#d7d7d1] bg-white p-6 text-center soft-shadow">
             <h1 className="font-[var(--font-cormorant)] text-[32px] font-medium text-[var(--forest-dark)]">
               暂无支付信息
             </h1>
@@ -134,7 +152,7 @@ export default function BookingPaymentPage() {
 
             <Link
               href="/"
-              className="mt-6 inline-flex rounded-full bg-[var(--forest)] px-6 py-3 font-[var(--font-jost)] text-sm font-medium text-[var(--cream)]"
+              className="mt-6 inline-flex rounded-lg bg-[var(--forest)] px-6 py-3 font-[var(--font-jost)] text-sm font-medium !text-white"
             >
               返回首页
             </Link>
@@ -147,143 +165,123 @@ export default function BookingPaymentPage() {
   }
 
   return (
-    <main className="page-shell">
+    <main className="min-h-screen bg-white">
       <Header />
 
-      <section className="px-5 pt-7">
+      <section className="bg-white px-5 pt-5">
         <div className="mobile-container">
-          <div className="mb-6 flex items-center justify-center gap-2 font-[var(--font-jost)] text-xs text-[var(--sage)]">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(60,85,56,0.14)] text-[var(--forest)]">
+          <div className="mb-4 flex items-center justify-center gap-1.5 font-[var(--font-jost)] text-[9px] text-[var(--sage)]">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[rgba(60,85,56,0.14)] text-[var(--forest)]">
               ✓
             </span>
             <span>认证邮箱</span>
 
-            <span className="h-px w-8 bg-[var(--linen)]" />
+            <span className="h-px w-4 bg-[var(--linen)]" />
 
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[rgba(60,85,56,0.14)] text-[var(--forest)]">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[rgba(60,85,56,0.14)] text-[var(--forest)]">
               ✓
             </span>
             <span>填写信息</span>
 
-            <span className="h-px w-8 bg-[var(--linen)]" />
+            <span className="h-px w-4 bg-[var(--linen)]" />
 
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--forest)] text-[var(--cream)]">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--forest)] !text-white">
               3
             </span>
             <span className="text-[var(--forest-dark)]">支付订单</span>
           </div>
 
-          <div className="rounded-[28px] border border-[var(--linen)] bg-[var(--card)] p-4 soft-shadow">
-            <div className="flex gap-4">
+          <div className="rounded-xl border border-[#d7d7d1] bg-white p-3 soft-shadow">
+            <div className="flex gap-3">
               <img
                 src={booking.listing_cover_image ?? ""}
                 alt={booking.listing_title}
-                className="h-24 w-28 rounded-2xl object-cover"
+                className="h-14 w-18 rounded-lg object-cover"
               />
 
               <div className="min-w-0 flex-1">
-                <p className="font-[var(--font-jost)] text-[11px] uppercase tracking-[0.12em] text-[var(--sage)]">
+                <p className="font-[var(--font-jost)] text-[9px] uppercase tracking-[0.1em] text-[var(--sage)]">
                   {booking.location_label}
                 </p>
 
-                <h2 className="mt-1 font-[var(--font-cormorant)] text-[24px] font-medium leading-tight text-[var(--forest-dark)]">
+                <h2 className="mt-1 font-[var(--font-cormorant)] text-sm font-medium leading-snug text-[var(--forest-dark)]">
                   {booking.listing_title}
                 </h2>
 
-                <p className="mt-2 font-[var(--font-jost)] text-xs text-[var(--sage)]">
+                <p className="mt-1 font-[var(--font-jost)] text-[10px] text-[var(--sage)]">
                   {booking.checkin_date} 至 {booking.checkout_date}
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 rounded-[20px] bg-[rgba(60,85,56,0.06)] p-4 text-center">
-              <div>
-                <p className="font-[var(--font-jost)] text-[11px] text-[var(--sage)]">
-                  晚数
-                </p>
-                <p className="mt-1 font-[var(--font-cormorant)] text-xl font-medium text-[var(--forest-dark)]">
+            <div className="mt-2 grid grid-cols-4 gap-1 rounded-lg border border-[rgba(60,85,56,0.14)] px-2 py-1.5">
+              <div className="flex items-center justify-center gap-0.5">
+                <p className="font-[var(--font-jost)] text-[9px] text-[var(--sage)]">晚数</p>
+                <p className="font-[var(--font-jost)] text-[10px] font-medium text-[var(--forest-dark)]">
                   {booking.nights}晚
                 </p>
               </div>
 
-              <div>
-                <p className="font-[var(--font-jost)] text-[11px] text-[var(--sage)]">
-                  房间
-                </p>
-                <p className="mt-1 font-[var(--font-cormorant)] text-xl font-medium text-[var(--forest-dark)]">
+              <div className="flex items-center justify-center gap-0.5">
+                <p className="font-[var(--font-jost)] text-[9px] text-[var(--sage)]">房间</p>
+                <p className="font-[var(--font-jost)] text-[10px] font-medium text-[var(--forest-dark)]">
                   {booking.num_rooms}间
                 </p>
               </div>
 
-              <div>
-                <p className="font-[var(--font-jost)] text-[11px] text-[var(--sage)]">
-                  入住人
+              <div className="flex items-center justify-center gap-0.5">
+                <p className="font-[var(--font-jost)] text-[9px] text-[var(--sage)]">最多入住</p>
+                <p className="font-[var(--font-jost)] text-[10px] font-medium text-[var(--forest-dark)]">
+                  {maxGuestCapacity}人
                 </p>
-                <p className="mt-1 font-[var(--font-cormorant)] text-xl font-medium text-[var(--forest-dark)]">
-                  {booking.num_guests}人
+              </div>
+
+              <div className="flex items-center justify-center gap-0.5">
+                <p className="font-[var(--font-jost)] text-[9px] text-[var(--sage)]">总价</p>
+                <p className="font-[var(--font-jost)] text-[10px] font-medium text-[var(--forest-dark)]">
+                  ฿{booking.total_price_thb.toLocaleString()}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="mt-5 rounded-[28px] border border-[var(--linen)] bg-[var(--card)] p-6 soft-shadow">
-            <h1 className="font-[var(--font-cormorant)] text-[34px] font-medium leading-tight text-[var(--forest-dark)]">
+          <div className="mt-4 rounded-xl border border-[#d7d7d1] bg-white p-4 soft-shadow">
+            <h1 className="font-[var(--font-cormorant)] text-[24px] font-medium leading-tight text-[var(--forest-dark)]">
               请完成支付
             </h1>
 
-            <p className="mt-3 font-[var(--font-jost)] text-sm font-light leading-7 text-[var(--sage)]">
+            <p className="mt-1.5 font-[var(--font-jost)] text-[11px] font-light leading-5 text-[var(--sage)]">
               订单已为您暂时保留，请使用支付宝扫码完成支付。支付时请务必备注订单编号，方便我们为您确认订单。
             </p>
 
-            <div className="mt-6 rounded-[24px] bg-[rgba(60,85,56,0.06)] p-4">
-              <p className="font-[var(--font-jost)] text-xs text-[var(--sage)]">
-                订单编号
-              </p>
+            <div className="mt-3 rounded-lg border border-[rgba(60,85,56,0.14)] bg-white px-3 py-2">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <p className="shrink-0 font-[var(--font-jost)] text-[10px] text-[var(--sage)]">
+                    订单编号
+                  </p>
 
-              <div className="mt-2 flex items-center justify-between gap-3">
-                <p className="font-[var(--font-cormorant)] text-[28px] font-semibold text-[var(--forest-dark)]">
-                  {booking.booking_id}
-                </p>
+                  <p className="font-[var(--font-jost)] text-xs font-semibold tracking-[0.08em] text-[var(--forest-dark)]">
+                    {booking.booking_id}
+                  </p>
+                </div>
 
                 <button
                   type="button"
                   onClick={handleCopyBookingId}
-                  className="shrink-0 rounded-full border border-[var(--linen)] bg-white px-3 py-2 font-[var(--font-jost)] text-xs text-[var(--forest-dark)]"
+                  className="shrink-0 rounded-lg border border-[#d7d7d1] bg-white px-2.5 py-1.5 font-[var(--font-jost)] text-[10px] text-[var(--forest-dark)]"
                 >
                   {copied ? "已复制" : "复制"}
                 </button>
               </div>
 
-              <p className="mt-2 font-[var(--font-jost)] text-xs font-light text-[var(--sage)]">
+              <p className="mt-1 font-[var(--font-jost)] text-[9px] font-light text-[var(--sage)]">
                 请在支付宝付款备注中填写该订单编号。
               </p>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-[22px] border border-[var(--linen)] bg-white p-4">
-                <p className="font-[var(--font-jost)] text-xs text-[var(--sage)]">
-                  应付金额
-                </p>
-                <p className="mt-2 font-[var(--font-cormorant)] text-[28px] font-semibold text-[var(--forest-dark)]">
-                  ฿{booking.total_price_thb.toLocaleString()}
-                </p>
-              </div>
-
-              <div className="rounded-[22px] border border-[var(--linen)] bg-white p-4">
-                <p className="font-[var(--font-jost)] text-xs text-[var(--sage)]">
-                  折合人民币
-                </p>
-                <p className="mt-2 font-[var(--font-cormorant)] text-[28px] font-semibold text-[var(--forest-dark)]">
-                  ¥{totalCny.toLocaleString()}
-                </p>
-                <p className="mt-1 font-[var(--font-jost)] text-[11px] text-[var(--sage)]">
-                  汇率：0.21
-                </p>
-              </div>
-            </div>
-
             {booking.saved_amount_thb && booking.saved_amount_thb > 0 ? (
-              <div className="mt-4 rounded-[22px] border border-[rgba(60,85,56,0.14)] bg-[rgba(60,85,56,0.06)] px-4 py-4">
+              <div className="mt-3 rounded-lg border border-[rgba(60,85,56,0.14)] bg-[rgba(60,85,56,0.04)] px-3 py-3">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="font-[var(--font-jost)] text-xs uppercase tracking-[0.12em] text-[var(--sage)]">
@@ -313,16 +311,19 @@ export default function BookingPaymentPage() {
               </div>
             ) : null}
 
-            <div className="mt-6 rounded-[26px] border border-[var(--linen)] bg-white p-5 text-center">
-              <h2 className="font-[var(--font-cormorant)] text-[28px] font-medium text-[var(--forest-dark)]">
-                支付宝支付
+            <div className="mt-4 rounded-lg border border-[#d7d7d1] bg-white p-4 text-center">
+              <h2 className="font-[var(--font-cormorant)] text-[22px] font-medium text-[var(--forest-dark)]">
+                应付金额 ¥{totalCny.toLocaleString(undefined, {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                })}
               </h2>
 
-              <p className="mt-2 font-[var(--font-jost)] text-sm font-light text-[var(--sage)]">
+              <p className="mt-1 font-[var(--font-jost)] text-[11px] font-light text-[var(--sage)]">
                 使用支付宝扫一扫二维码完成支付
               </p>
 
-              <div className="mx-auto mt-5 flex h-56 w-56 items-center justify-center overflow-hidden rounded-2xl border border-[var(--linen)] bg-[var(--cream)]">
+              <div className="relative mx-auto mt-3 flex h-48 w-48 items-center justify-center overflow-hidden rounded-lg border border-[#d7d7d1] bg-white">
                 <img
                   src="/payment/alipay-qr.jpg"
                   alt="支付宝支付二维码"
@@ -337,20 +338,20 @@ export default function BookingPaymentPage() {
               </div>
             </div>
 
-            <div className="mt-5 rounded-[22px] bg-[#f7efe1] px-4 py-4">
-              <p className="font-[var(--font-jost)] text-sm font-light leading-7 text-[var(--forest-dark)]">
+            <div className="mt-3 rounded-lg bg-[#f7efe1] px-3 py-3">
+              <p className="font-[var(--font-jost)] text-[11px] font-light leading-5 text-[var(--forest-dark)]">
                 支付完成后，我们将尽快为您确认订单，并通过电子邮件发送确认信息。
                 如已完成支付，请耐心等待我们的确认邮件。
               </p>
             </div>
           </div>
 
-          <div className="mt-5 rounded-[24px] border border-[var(--linen)] bg-[var(--card)] p-5">
-            <p className="font-[var(--font-jost)] text-xs uppercase tracking-[0.16em] text-[var(--sage)]">
+          <div className="mt-4 rounded-xl border border-[#d7d7d1] bg-white p-4">
+            <p className="font-[var(--font-jost)] text-[10px] uppercase tracking-[0.16em] text-[var(--sage)]">
               Guest Info
             </p>
 
-            <div className="mt-3 space-y-2 font-[var(--font-jost)] text-sm font-light text-[var(--forest-dark)]">
+            <div className="mt-2 space-y-1.5 font-[var(--font-jost)] text-xs font-light text-[var(--forest-dark)]">
               <p>
                 预订人：{booking.guest_last_name_pinyin}{" "}
                 {booking.guest_first_name_pinyin}

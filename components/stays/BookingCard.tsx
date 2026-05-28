@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Listing } from "@/data/listings";
 import { saveBookingDraft } from "@/lib/bookingDraft";
@@ -99,6 +99,9 @@ function getCalendarDays(monthDate: Date) {
 
 export function BookingCard({ listing }: BookingCardProps) {
   const router = useRouter();
+  const checkinButtonRef = useRef<HTMLButtonElement>(null);
+  const checkoutButtonRef = useRef<HTMLButtonElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
   const today = getTodayString();
   const firstCalendarMonth = new Date(`${today.slice(0, 7)}-01T00:00:00`);
 
@@ -128,6 +131,30 @@ export function BookingCard({ listing }: BookingCardProps) {
   const discountedPricePerNight = Math.round(
     listing.pricePerNightThb * pricing.discountRate
   );
+
+  useEffect(() => {
+    if (!activeDateField) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      const clickedDateInput =
+        checkinButtonRef.current?.contains(target) ||
+        checkoutButtonRef.current?.contains(target);
+      const clickedCalendar = calendarRef.current?.contains(target);
+
+      if (!clickedDateInput && !clickedCalendar) {
+        setActiveDateField(null);
+      }
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [activeDateField]);
 
   const handleReserve = () => {
     if (!checkin || !checkout || nights <= 0 || totalPrice <= 0) {
@@ -162,7 +189,7 @@ export function BookingCard({ listing }: BookingCardProps) {
   };
 
   const visibleCalendarMonths = useMemo(() => {
-    return [calendarMonth, addMonths(calendarMonth, 1)];
+    return [calendarMonth];
   }, [calendarMonth]);
 
   const checkoutMinDate = getNextDateString(checkin) || today;
@@ -197,7 +224,7 @@ export function BookingCard({ listing }: BookingCardProps) {
 
   return (
     <section className="bg-white px-2.5 pt-2">
-      <div className="mx-auto w-full max-w-[460px] rounded-xl border border-[#d7d7d1] bg-white px-3 py-2.5 soft-shadow">
+      <div className="relative mx-auto w-full max-w-[460px] rounded-xl border border-[#d7d7d1] bg-white px-3 py-2.5 soft-shadow">
         <div className="grid grid-cols-[0.72fr_0.64fr_1fr_1fr] gap-1.5">
           <label className="block">
             <span className="mb-1.5 block whitespace-nowrap font-[var(--font-jost)] text-[10px] font-medium text-[var(--sage)]">
@@ -247,6 +274,7 @@ export function BookingCard({ listing }: BookingCardProps) {
             </span>
 
             <button
+              ref={checkinButtonRef}
               type="button"
               onClick={() => setActiveDateField("checkin")}
               className={`flex h-7 w-full items-center truncate rounded-lg border border-[var(--linen)] bg-white px-1.5 text-left font-[var(--font-jost)] text-[8px] outline-none ${
@@ -265,6 +293,7 @@ export function BookingCard({ listing }: BookingCardProps) {
             </span>
 
             <button
+              ref={checkoutButtonRef}
               type="button"
               onClick={() => {
                 setActiveDateField("checkout");
@@ -286,34 +315,11 @@ export function BookingCard({ listing }: BookingCardProps) {
         </div>
 
         {activeDateField ? (
-          <div className="mt-2 rounded-lg border border-[var(--linen)] bg-white p-2">
-            <div className="grid grid-cols-2 gap-1 font-[var(--font-jost)] text-[9px]">
-              <button
-                type="button"
-                onClick={() => setActiveDateField("checkin")}
-                className={`rounded-md px-2 py-1 ${
-                  activeDateField === "checkin"
-                    ? "bg-[rgba(60,85,56,0.1)] text-[var(--forest-dark)]"
-                    : "text-[var(--sage)]"
-                }`}
-              >
-                入住日期
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveDateField("checkout")}
-                className={`rounded-md px-2 py-1 ${
-                  activeDateField === "checkout"
-                    ? "bg-[rgba(60,85,56,0.1)] text-[var(--forest-dark)]"
-                    : "text-[var(--sage)]"
-                }`}
-              >
-                退房日期
-              </button>
-            </div>
-
-            <div className="mt-2 flex items-center justify-between">
+          <div
+            ref={calendarRef}
+            className="absolute left-1/2 top-[58px] z-30 flex aspect-square w-[220px] -translate-x-1/2 flex-col rounded-lg border border-[var(--linen)] bg-white p-2 shadow-[0_16px_34px_rgba(42,61,39,0.16)]"
+          >
+            <div className="flex items-center justify-between">
               <button
                 type="button"
                 disabled={!canGoPrevious}
@@ -338,7 +344,7 @@ export function BookingCard({ listing }: BookingCardProps) {
               </button>
             </div>
 
-            <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="mt-2 grid flex-1 gap-2">
               {visibleCalendarMonths.map((monthDate) => (
                 <div key={getMonthTitle(monthDate)}>
                   <div className="text-center font-[var(--font-jost)] text-[8px] font-medium text-[var(--sage)]">
@@ -356,10 +362,12 @@ export function BookingCard({ listing }: BookingCardProps) {
                   <div className="mt-1 grid grid-cols-7 gap-0.5">
                     {getCalendarDays(monthDate).map((date, index) => {
                       if (!date) {
-                        return <div key={`blank-${index}`} className="h-4" />;
+                        return <div key={`blank-${index}`} className="h-5" />;
                       }
 
                       const isSelected = date === checkin || date === checkout;
+                      const isInSelectedRange =
+                        checkin && checkout && date >= checkin && date <= checkout;
                       const disabled = isDateDisabled(date);
                       const day = Number(date.slice(-2));
 
@@ -369,9 +377,9 @@ export function BookingCard({ listing }: BookingCardProps) {
                           type="button"
                           disabled={disabled}
                           onClick={() => handleDateSelect(date)}
-                          className={`flex h-4 items-center justify-center rounded font-[var(--font-jost)] text-[8px] leading-none ${
-                            isSelected
-                              ? "bg-[var(--forest)] text-white"
+                          className={`flex h-5 items-center justify-center rounded font-[var(--font-jost)] text-[8px] leading-none ${
+                            isSelected || isInSelectedRange
+                              ? "bg-[rgba(60,85,56,0.16)] text-[var(--forest-dark)]"
                               : "bg-transparent text-[var(--forest-dark)]"
                           } disabled:text-[var(--sage-light)]`}
                         >

@@ -11,36 +11,66 @@ import {
   getLookupBooking,
   type BookingRow,
 } from "@/lib/bookings";
+import { getListingBySlugFromSupabase } from "@/lib/listings";
 
 export default function BookingDetailPage() {
   const [booking, setBooking] = useState<BookingRow | null>(null);
+  const [listingMaxGuests, setListingMaxGuests] = useState<number | null>(null);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setBooking(getLookupBooking());
+    let isActive = true;
+
+    const timer = window.setTimeout(async () => {
+      const currentBooking = getLookupBooking();
+      setBooking(currentBooking);
+
+      if (!currentBooking) return;
+
+      try {
+        const listing = await getListingBySlugFromSupabase(
+          currentBooking.listing_slug
+        );
+
+        if (isActive) {
+          setListingMaxGuests(listing?.maxGuests ?? null);
+        }
+      } catch (error) {
+        console.error(error);
+
+        if (isActive) {
+          setListingMaxGuests(null);
+        }
+      }
     }, 0);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      isActive = false;
+      window.clearTimeout(timer);
+    };
   }, []);
+
+  const maxGuestCapacity = booking
+    ? booking.num_rooms * (listingMaxGuests ?? booking.num_guests)
+    : 0;
 
   if (!booking) {
     return (
-      <main className="page-shell">
+      <main className="min-h-screen bg-white">
         <Header />
 
-        <section className="px-5 py-14">
-          <div className="mobile-container rounded-[28px] border border-[var(--linen)] bg-[var(--card)] p-6 text-center soft-shadow">
-            <h1 className="font-[var(--font-cormorant)] text-[32px] font-medium text-[var(--forest-dark)]">
+        <section className="bg-white px-5 py-14">
+          <div className="mobile-container rounded-xl border border-[#d7d7d1] bg-white p-6 text-center soft-shadow">
+            <h1 className="font-[var(--font-cormorant)] text-[26px] font-medium text-[var(--forest-dark)]">
               暂无预定详情
             </h1>
 
-            <p className="mt-4 font-[var(--font-jost)] text-sm font-light leading-7 text-[var(--sage)]">
+            <p className="mt-3 font-[var(--font-jost)] text-xs font-light leading-6 text-[var(--sage)]">
               请先输入邮箱地址和订单编号，查询对应的预定信息。
             </p>
 
             <Link
               href="/booking/lookup"
-              className="mt-6 inline-flex rounded-full bg-[var(--forest)] px-6 py-3 font-[var(--font-jost)] text-sm font-medium text-[var(--cream)]"
+              className="mt-5 inline-flex rounded-lg bg-[var(--forest)] px-6 py-2.5 font-[var(--font-jost)] text-xs font-medium !text-white"
             >
               返回查询
             </Link>
@@ -53,101 +83,97 @@ export default function BookingDetailPage() {
   }
 
   return (
-    <main className="page-shell">
+    <main className="min-h-screen bg-white">
       <Header />
 
-      <section className="bg-[var(--forest)] px-5 py-5 text-center text-[var(--cream)]">
+      <section className="bg-white px-5 pb-10 pt-5">
         <div className="mobile-container">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--cream)] text-[var(--forest)]">
-            ✓
+          <div className="mb-4 text-center">
+            <p className="font-[var(--font-jost)] text-[10px] uppercase tracking-[0.16em] text-[var(--sage)]">
+              Booking Detail
+            </p>
+            <h1 className="mt-1 font-[var(--font-cormorant)] text-[30px] font-medium text-[var(--forest-dark)]">
+              预定详情
+            </h1>
           </div>
 
-          <h1 className="mt-3 font-[var(--font-cormorant)] text-[36px] font-medium">
-            预定详情
-          </h1>
-        </div>
-      </section>
+          <div className="grid grid-cols-2 gap-2">
+            <StatusCard
+              label="支付状态"
+              value={formatPaymentStatus(booking.payment_status)}
+            />
+            <StatusCard
+              label="预定状态"
+              value={formatBookingStatus(booking.booking_status)}
+            />
+          </div>
 
-      <section className="px-5 py-8">
-        <div className="mobile-container">
-          <div className="rounded-[30px] border border-[var(--linen)] bg-[var(--card)] p-5 soft-shadow">
-            <div className="flex gap-4">
-              {booking.listing_cover_image ? (
-                <img
-                  src={booking.listing_cover_image}
-                  alt={booking.listing_title}
-                  className="h-28 w-32 rounded-2xl object-cover"
-                />
-              ) : null}
+          <div className="mt-4 rounded-xl border border-[#d7d7d1] bg-white p-4 soft-shadow">
+            <h2 className="font-[var(--font-cormorant)] text-[22px] font-medium text-[var(--forest-dark)]">
+              订单信息
+            </h2>
 
-              <div className="min-w-0 flex-1">
-                <p className="font-[var(--font-jost)] text-xs uppercase tracking-[0.12em] text-[var(--sage)]">
-                  {booking.location_label}
-                </p>
-
-                <h2 className="mt-2 font-[var(--font-cormorant)] text-[28px] font-medium leading-tight text-[var(--forest-dark)]">
-                  {booking.listing_title}
-                </h2>
-              </div>
-            </div>
-
-            <div className="mt-6 divide-y divide-[var(--linen)]">
+            <div className="mt-2 divide-y divide-[#e3e3dc]">
               <DetailRow label="订单编号" value={booking.booking_id} />
-              <DetailRow label="入住" value={booking.checkin_date} />
-              <DetailRow label="退房" value={booking.checkout_date} />
-              <DetailRow label="几间房" value={`${booking.num_rooms}间`} />
-              <DetailRow label="几人入住" value={`${booking.num_guests}人`} />
-              <DetailRow label="预定人邮箱" value={booking.guest_email} />
-              
-              {booking.saved_amount_thb && booking.saved_amount_thb > 0 ? (
-                <>
-                  <DetailRow
-                    label="原价"
-                    value={`THB ${(booking.original_total_thb ?? booking.total_price_thb).toLocaleString()}`}
-                  />
-                  <DetailRow
-                    label="长住优惠"
-                    value={booking.discount_label ?? "已应用优惠"}
-                  />
-                  <DetailRow
-                    label="已优惠"
-                    value={`-THB ${booking.saved_amount_thb.toLocaleString()}`}
-                  />
-                </>
-              ) : null}
-
+              <DetailRow label="房源名称" value={booking.listing_title} />
+              <DetailRow label="入住日期" value={booking.checkin_date} />
+              <DetailRow label="退房日期" value={booking.checkout_date} />
+              <DetailRow label="几晚" value={`${booking.nights}晚`} />
+              <DetailRow label="房间数量" value={`${booking.num_rooms}间`} />
+              <DetailRow label="最多入住人数" value={`${maxGuestCapacity}人`} />
               <DetailRow
-                label="订单总价"
-                value={`THB ${booking.total_price_thb.toLocaleString()}`}
+                label="总金额"
+                value={`฿${booking.total_price_thb.toLocaleString()}`}
                 highlight
               />
               <DetailRow
                 label="支付方式"
                 value={formatPaymentMethod(booking.payment_method)}
               />
-              <DetailRow
-                label="支付状态"
-                value={formatPaymentStatus(booking.payment_status)}
-              />
-              <DetailRow
-                label="预定状态"
-                value={formatBookingStatus(booking.booking_status)}
-              />
+              <DetailRow label="预定人邮箱" value={booking.guest_email} />
+
+              {booking.wechat_id ? (
+                <DetailRow label="微信号" value={booking.wechat_id} />
+              ) : null}
             </div>
           </div>
 
-          <div className="mt-5 rounded-[24px] border border-[var(--linen)] bg-[#f7efe1] px-5 py-4">
-            <p className="font-[var(--font-jost)] text-sm font-light leading-7 text-[var(--forest-dark)]">
-              请妥善保留订单编号，以便后续客服服务。
-            </p>
-          </div>
+          {booking.saved_amount_thb && booking.saved_amount_thb > 0 ? (
+            <div className="mt-4 rounded-xl border border-[#d7d7d1] bg-white p-4 soft-shadow">
+              <h2 className="font-[var(--font-cormorant)] text-[22px] font-medium text-[var(--forest-dark)]">
+                优惠信息
+              </h2>
 
-          <div className="mt-7 flex justify-center gap-6 font-[var(--font-jost)] text-sm text-[var(--forest-dark)]">
-            <Link href="/" className="underline underline-offset-4">
+              <div className="mt-2 divide-y divide-[#e3e3dc]">
+                <DetailRow
+                  label="原价"
+                  value={`฿${(booking.original_total_thb ?? booking.total_price_thb).toLocaleString()}`}
+                />
+                <DetailRow
+                  label="长住优惠"
+                  value={booking.discount_label ?? "已应用优惠"}
+                />
+                <DetailRow
+                  label="已优惠"
+                  value={`-฿${booking.saved_amount_thb.toLocaleString()}`}
+                  highlight
+                />
+              </div>
+            </div>
+          ) : null}
+
+          <div className="mt-5 grid grid-cols-2 gap-3 font-[var(--font-jost)] text-xs font-medium">
+            <Link
+              href="/"
+              className="flex justify-center rounded-lg border border-[#d7d7d1] bg-white px-4 py-2.5 text-[var(--forest-dark)]"
+            >
               返回首页
             </Link>
 
-            <Link href="/booking/lookup" className="underline underline-offset-4">
+            <Link
+              href="/booking/lookup"
+              className="flex justify-center rounded-lg bg-[var(--forest)] px-4 py-2.5 !text-white"
+            >
               重新查询
             </Link>
           </div>
@@ -156,6 +182,24 @@ export default function BookingDetailPage() {
 
       <Footer />
     </main>
+  );
+}
+
+type StatusCardProps = {
+  label: string;
+  value: string;
+};
+
+function StatusCard({ label, value }: StatusCardProps) {
+  return (
+    <div className="rounded-xl border border-[#d7d7d1] bg-white px-3 py-2.5">
+      <p className="font-[var(--font-jost)] text-[9px] text-[var(--sage)]">
+        {label}
+      </p>
+      <p className="mt-1 font-[var(--font-jost)] text-xs font-medium text-[var(--forest-dark)]">
+        {value}
+      </p>
+    </div>
   );
 }
 
