@@ -3,10 +3,10 @@ import Link from "next/link";
 export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-[rgba(60,85,56,0.08)] bg-white">
-      <div className="mobile-container flex h-16 items-center justify-between px-5">
+      <div className="mobile-container flex h-14 items-center justify-between px-5">
         <button
           aria-label="打开菜单"
-          className="flex h-10 w-10 items-center justify-center"
+          className="flex h-9 w-9 items-center justify-center"
         >
           <span className="flex flex-col gap-1">
             <span className="block h-0.5 w-5 rounded-full bg-[var(--forest-dark)]" />
@@ -24,7 +24,7 @@ export function Header() {
 
         <Link
           href="/booking/lookup"
-          className="rounded-md bg-[var(--forest)] px-3.5 py-2 font-[var(--font-jost)] text-xs font-medium !text-white"
+          className="rounded-md bg-[var(--forest)] px-3 py-1.5 font-[var(--font-jost)] text-xs font-medium !text-white"
         >
           查看预定
         </Link>
